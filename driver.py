@@ -1,13 +1,19 @@
 import html
 import os
 import random
-
+import ollama
 import requests
 
 TODOIST_TASKS_URL = "https://api.todoist.com/api/v1/tasks"
 TODOIST_SECTION_URL = "https://api.todoist.com/api/v1/sections"
 TELEGRAM_SEND_URL = "https://api.telegram.org/bot{token}/sendMessage"
 
+
+def get_ollama_response(model, prompt):
+    return ollama.generate(
+        model=model,
+        prompt=prompt
+    )
 
 def required_env(name: str) -> str:
     value = os.getenv(name)
@@ -183,4 +189,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    get_ollama_response(model="gemma4:latest",
+                        prompt='What are the key safety considerations when working with industrial robots?')
     main()
