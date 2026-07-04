@@ -1,10 +1,11 @@
+import html
 import os
 import random
-import html
+
 import requests
 
-
 TODOIST_TASKS_URL = "https://api.todoist.com/api/v1/tasks"
+TODOIST_SECTION_URL = "https://api.todoist.com/api/v1/sections"
 TELEGRAM_SEND_URL = "https://api.telegram.org/bot{token}/sendMessage"
 
 
@@ -22,14 +23,16 @@ TELEGRAM_CHAT_ID = required_env("TELEGRAM_CHAT_ID")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GROQ_API_URL = os.environ.get("GROQ_URL", "https://api.groq.com/openai/v1/chat/completions")
 
+TODOIST_HEADER = {
+    "Authorization": f"Bearer {TODOIST_TOKEN}",
+}
+
+BATCH = 1
+
 
 def get_todoist_tasks(project_id: str) -> list[dict]:
     tasks = []
     cursor = None
-
-    headers = {
-        "Authorization": f"Bearer {TODOIST_TOKEN}",
-    }
 
     while True:
         params = {
@@ -37,19 +40,7 @@ def get_todoist_tasks(project_id: str) -> list[dict]:
             "limit": 200,
         }
 
-        if cursor:
-            params["cursor"] = cursor
-
-        response = requests.get(
-            TODOIST_TASKS_URL,
-            headers=headers,
-            params=params,
-            timeout=30,
-        )
-        response.raise_for_status()
-
-        data = response.json()
-
+        data = get_response(TODOIST_TASKS_URL, cursor, params)
         page_tasks = data.get("results", [])
         tasks.extend(page_tasks)
 
@@ -58,6 +49,20 @@ def get_todoist_tasks(project_id: str) -> list[dict]:
             break
 
     return tasks
+
+
+def get_response(url, cursor, params):
+    if cursor:
+        params["cursor"] = cursor
+    response = requests.get(
+        url,
+        headers=TODOIST_HEADER,
+        params=params,
+        timeout=30,
+    )
+    response.raise_for_status()
+    data = response.json()
+    return data
 
 
 def todoist_priority(priority) -> str:
@@ -70,47 +75,61 @@ def todoist_priority(priority) -> str:
     }
     return mapping.get(priority, "P4")
 
-def send_to_groq(self, content):
-    from groq import Groq
 
-    client = Groq(
-        api_key=self.GROQ_API_KEY,
-    )
-    try:
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": content,
-                }
-            ],
-            model="llama-3.3-70b-versatile",
-        )
-        return chat_completion.choices[0].message.content
-    except requests.exceptions.RequestException as e:
-        return f"Error calling Groq API: {str(e)}"
+# def send_to_groq(self, content):
+#     from groq import Groq
+#
+#     client = Groq(
+#         api_key=self.GROQ_API_KEY,
+#     )
+#     try:
+#         chat_completion = client.chat.completions.create(
+#             messages=[
+#                 {
+#                     "role": "user",
+#                     "content": content,
+#                 }
+#             ],
+#             model="llama-3.3-70b-versatile",
+#         )
+#         return chat_completion.choices[0].message.content
+#     except requests.exceptions.RequestException as e:
+#         return f"Error calling Groq API: {str(e)}"
 
+
+def get_section(section_id):
+    cursor = None
+    params = None
+    data = get_response(f"{TODOIST_SECTION_URL}/{section_id}", cursor, params)
+    if data:
+        return data.get("name", None)
+    return None
 
 def format_task(task: dict, index: int) -> str:
     title = html.escape(task.get("content", "Untitled task"))
     description = html.escape(task.get("description") or "")
+    section_id = task.get("section_id", None)
+    section = get_section(section_id)
 
     due = task.get("due") or {}
-    due_text = due.get("string") or due.get("date") or "No due date"
+    due_text = due.get("string") or due.get("date") or None
 
     labels = task.get("labels") or []
-    labels_text = ", ".join(labels) if labels else "No labels"
+    labels_text = ", ".join(labels) if labels else None
     # ai_summary = send_to_groq(f"summarize: {title}")
 
     # priority = todoist_priority(task.get("priority"))
 
-    output = (
-        f"<b>{index}. {title}</b>\n"
-        # f"<b>AI Summary: {ai_summary}</b>\n"
-        # f"Priority: {priority}\n"
-        f"Due: {html.escape(due_text)}\n"
-        f"Labels: {html.escape(labels_text)}"
-    )
+    msg = f"<b>{index}. {title}</b>\n"
+
+    if due_text:
+        msg = msg + f"<u>Due</u>: {html.escape(due_text)}\n"
+    if labels_text:
+        msg = msg + f"<u>Labels</u>: {html.escape(labels_text)}"
+    if section:
+        msg = msg + f"\n<u>Catagory/Section</u>: {html.escape(section)}"
+
+    output = msg
 
     if description:
         output += f"\nNotes: {description}"
@@ -122,24 +141,34 @@ def build_message(tasks: list[dict]) -> str:
     if not tasks:
         return "No active tasks found in this Todoist project."
 
-    selected_tasks = random.sample(tasks, k=min(3, len(tasks)))
+    selected_tasks = random.sample(tasks, k=min(BATCH, len(tasks)))
 
     formatted_tasks = [
         format_task(task, index)
         for index, task in enumerate(selected_tasks, start=1)
     ]
 
-    return "<b>🎯 Random 3 Todoist Tasks</b>\n\n" + "\n\n".join(formatted_tasks)
+    return f"<b>🎯 == Automated: {BATCH} read from the Vault  ==</b>\n\n" + "\n\n".join(formatted_tasks)
+
+
+# def build_scheduled_date():
+#     # Get the exact current local date and time
+#     now = datetime.now()
+#
+#     # Add 20 seconds using timedelta
+#     return int((now + timedelta(seconds=20)).timestamp())
 
 
 def send_telegram_message(message: str) -> None:
     url = TELEGRAM_SEND_URL.format(token=TELEGRAM_BOT_TOKEN)
+    # ts = build_scheduled_date()
 
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
         "text": message,
         "parse_mode": "HTML",
-        "disable_web_page_preview": True,
+        "disable_web_page_preview": False
+        # "scheduled_date": ts
     }
 
     response = requests.post(url, json=payload, timeout=30)
