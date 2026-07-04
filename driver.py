@@ -189,6 +189,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    get_ollama_response(model="gemma4:latest",
-                        prompt='What are the key safety considerations when working with industrial robots?')
+    # get_ollama_response(model="gemma4:latest",
+    #                     prompt='What are the key safety considerations when working with industrial robots?')
     main()
