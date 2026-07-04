@@ -5,7 +5,7 @@ name: link diver
 
 on:
   schedule:
-    - cron: "17 2 * * *"
+    - cron: "0 04 */2 * *"
   workflow_dispatch:
 
 permissions:
