@@ -154,7 +154,7 @@ def build_message(tasks: list[dict]) -> str:
         for index, task in enumerate(selected_tasks, start=1)
     ]
 
-    return f"<b>🎯 == Automated: {BATCH} read from the Vault  ==</b>\n\n" + "\n\n".join(formatted_tasks)
+    return formatted_tasks
 
 
 # def build_scheduled_date():
