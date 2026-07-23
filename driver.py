@@ -134,11 +134,11 @@ def format_task(task: dict, index: int) -> str:
         msg = f"<b>{title}</b>\n"
 
     if due_text:
-        msg = msg + f"Due: {html.escape(due_text)}\n"
+        msg = msg + f"<b>Due</b>: {html.escape(due_text)}\n"
     if labels_text:
-        msg = msg + f"Labels: {html.escape(labels_text)}"
+        msg = msg + f"<b>Labels</b>: {html.escape(labels_text)}"
     if section:
-        msg = msg + f"\nCatagory/Section: {html.escape(section)}"
+        msg = msg + f"\n<b>Category/Section</b>: {html.escape(section)}"
 
     output = msg
 
@@ -197,3 +197,7 @@ if __name__ == "__main__":
     # get_ollama_response(model="gemma4:latest",
     #                     prompt='What are the key safety considerations when working with industrial robots?')
     main()
+
+
+#TODO: Add a feature to close the task from telegram
+#TODO: Add ollama at the time of cicd pipeline
