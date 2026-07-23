@@ -126,14 +126,19 @@ def format_task(task: dict, index: int) -> str:
 
     # priority = todoist_priority(task.get("priority"))
 
-    msg = f"<b>{index}. {title}</b>\n"
+    if title:
+        title = title.replace('[', '').replace(']', '').replace('(', '\n\n').replace(')', '')
+    if BATCH > 1:
+        msg = f"<b>{index}. {title}</b>\n"
+    else:
+        msg = f"<b>{title}</b>\n"
 
     if due_text:
-        msg = msg + f"<u>Due</u>: {html.escape(due_text)}\n"
+        msg = msg + f"Due: {html.escape(due_text)}\n"
     if labels_text:
-        msg = msg + f"<u>Labels</u>: {html.escape(labels_text)}"
+        msg = msg + f"Labels: {html.escape(labels_text)}"
     if section:
-        msg = msg + f"\n<u>Catagory/Section</u>: {html.escape(section)}"
+        msg = msg + f"\nCatagory/Section: {html.escape(section)}"
 
     output = msg
 
