@@ -198,6 +198,5 @@ if __name__ == "__main__":
     #                     prompt='What are the key safety considerations when working with industrial robots?')
     main()
 
-
 #TODO: Add a feature to close the task from telegram
-#TODO: Add ollama at the time of cicd pipeline
+#TODO: Add ollama at the time of cicd pipeline the function is already written
