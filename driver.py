@@ -126,14 +126,19 @@ def format_task(task: dict, index: int) -> str:
 
     # priority = todoist_priority(task.get("priority"))
 
-    msg = f"<b>{index}. {title}</b>\n"
+    if title:
+        title = title.replace('[', '').replace(']', '').replace('(', '\n\n').replace(')', '')
+    if BATCH > 1:
+        msg = f"<b>{index}. {title}</b>\n"
+    else:
+        msg = f"<b>{title}</b>\n"
 
     if due_text:
-        msg = msg + f"<u>Due</u>: {html.escape(due_text)}\n"
+        msg = msg + f"<b>Due</b>: {html.escape(due_text)}\n"
     if labels_text:
-        msg = msg + f"<u>Labels</u>: {html.escape(labels_text)}"
+        msg = msg + f"<b>Labels</b>: {html.escape(labels_text)}"
     if section:
-        msg = msg + f"\n<u>Catagory/Section</u>: {html.escape(section)}"
+        msg = msg + f"\n<b>Category/Section</b>: {html.escape(section)}"
 
     output = msg
 
@@ -154,7 +159,7 @@ def build_message(tasks: list[dict]) -> str:
         for index, task in enumerate(selected_tasks, start=1)
     ]
 
-    return f"<b>🎯 == Automated: {BATCH} read from the Vault  ==</b>\n\n" + "\n\n".join(formatted_tasks)
+    return f"".join(formatted_tasks)
 
 
 # def build_scheduled_date():
@@ -192,10 +197,6 @@ if __name__ == "__main__":
     # get_ollama_response(model="gemma4:latest",
     #                     prompt='What are the key safety considerations when working with industrial robots?')
     main()
-<<<<<<< Updated upstream
-=======
-
 
 #TODO: Add a feature to close the task from telegram
 #TODO: Add ollama at the time of cicd pipeline the function is already written
->>>>>>> Stashed changes
