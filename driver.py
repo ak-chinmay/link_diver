@@ -192,3 +192,10 @@ if __name__ == "__main__":
     # get_ollama_response(model="gemma4:latest",
     #                     prompt='What are the key safety considerations when working with industrial robots?')
     main()
+<<<<<<< Updated upstream
+=======
+
+
+#TODO: Add a feature to close the task from telegram
+#TODO: Add ollama at the time of cicd pipeline the function is already written
+>>>>>>> Stashed changes
