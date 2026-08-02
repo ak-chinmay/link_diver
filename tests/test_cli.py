@@ -100,7 +100,6 @@ def test_create_service_assembles_sources_in_configured_order() -> None:
     )
     todoist_source = Mock()
     twitter_source = Mock()
-    combined_source = Mock()
     telegram_client = Mock()
 
     with patch(
@@ -108,20 +107,19 @@ def test_create_service_assembles_sources_in_configured_order() -> None:
         side_effect=[todoist_source, twitter_source],
     ) as source_factory:
         with patch(
-            "link_diver.cli.SequentialSources",
-            return_value=combined_source,
-        ) as aggregator:
-            with patch(
-                "link_diver.cli.TelegramClient",
-                return_value=telegram_client,
-            ):
-                service = create_service(settings)
+            "link_diver.cli.TelegramClient",
+            return_value=telegram_client,
+        ):
+            service = create_service(settings)
 
     assert source_factory.call_args_list == [
         call(settings, "todoist"),
         call(settings, "twitter_cookie"),
     ]
-    aggregator.assert_called_once_with([todoist_source, twitter_source])
-    combined_source.build_message.return_value = "selected item"
-    assert service.run() == "selected item"
-    telegram_client.send_message.assert_called_once_with("selected item")
+    todoist_source.build_message.return_value = "selected task"
+    twitter_source.build_message.return_value = "selected post"
+    assert service.run() == "selected task\n\nselected post"
+    assert telegram_client.send_message.call_args_list == [
+        call("selected task"),
+        call("selected post"),
+    ]

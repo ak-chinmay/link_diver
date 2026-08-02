@@ -5,9 +5,7 @@ from __future__ import annotations
 from link_diver.config import Settings
 from link_diver.service import LinkDiverService
 from link_diver.sources import (
-    CandidateSource,
     ContentSource,
-    SequentialSources,
     TodoistSource,
     TwitterBookmarksSource,
 )
@@ -35,13 +33,10 @@ def create_service(settings: Settings) -> LinkDiverService:
         _create_source(settings, source_name)
         for source_name in settings.content_sources
     ]
-    source: ContentSource = (
-        SequentialSources(sources) if len(sources) > 1 else sources[0]
-    )
-    return LinkDiverService(source, telegram)
+    return LinkDiverService(sources, telegram)
 
 
-def _create_source(settings: Settings, source_name: str) -> CandidateSource:
+def _create_source(settings: Settings, source_name: str) -> ContentSource:
     """Construct one configured source by name."""
     if source_name == "twitter":
         return TwitterBookmarksSource(

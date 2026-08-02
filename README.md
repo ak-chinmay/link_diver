@@ -43,17 +43,17 @@ Optional variables:
 | --- | ---: | --- |
 | `CONTENT_SOURCES` | `todoist` | Ordered comma-separated providers. |
 | `CONTENT_SOURCE` | — | Backward-compatible single-source alternative. |
-| `BATCH_SIZE` | `1` | Items per message in single-source mode. |
+| `BATCH_SIZE` | `1` | Random items selected from each source. |
 | `REQUEST_TIMEOUT` | `30` | HTTP timeout in seconds. |
 
 Supported source names are `todoist`, `twitter` (paid official API), and
 `twitter_cookie` (unofficial browser access).
 
 When multiple sources are configured, Link Diver processes each source
-sequentially in the listed order, combines all retrieved items, uniformly
-selects exactly one item from the combined pool, and sends one Telegram
-message. A source containing more items therefore has a proportionally larger
-chance of supplying the selected item.
+sequentially in the listed order. Each source independently selects one random
+item and sends its own Telegram message. With
+`CONTENT_SOURCES=todoist,twitter_cookie`, every successful run therefore sends
+one Todoist message followed by one Twitter bookmark message.
 
 For Todoist plus the free cookie-based Twitter source:
 
