@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-current_dir="$(pwd)"
-python3 "$current_dir"/driver.py
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+python3 "$script_dir/driver.py"
