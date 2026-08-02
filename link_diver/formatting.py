@@ -5,10 +5,12 @@ from __future__ import annotations
 import html
 import random
 from collections.abc import Callable, Sequence
-from typing import Any
+from typing import Any, Optional
 
 Task = dict[str, Any]
-SectionResolver = Callable[[str | None], str | None]
+# Type aliases are evaluated at runtime even when ``annotations`` future
+# behavior is enabled. Use Optional here to retain Python 3.9 compatibility.
+SectionResolver = Callable[[Optional[str]], Optional[str]]
 
 
 def format_task(

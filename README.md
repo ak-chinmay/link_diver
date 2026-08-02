@@ -4,6 +4,8 @@ Link Diver selects one or more active tasks from a Todoist project and sends
 them to a Telegram chat. It is designed for scheduled runs from cron, CI, or a
 small always-on host.
 
+Link Diver supports Python 3.9 and newer.
+
 ## Architecture
 
 The codebase follows a ports-and-adapters-style split without introducing a
