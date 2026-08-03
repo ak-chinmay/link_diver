@@ -2,47 +2,46 @@
 
 from __future__ import annotations
 
-from link_diver.formatting import build_message
+from collections.abc import Sequence
+
+from link_diver.sources import ContentSource
 from link_diver.telegram import TelegramClient
-from link_diver.todoist import TodoistClient
 
 
 class LinkDiverService:
     """Coordinate task retrieval, formatting, and Telegram delivery.
 
     Args:
-        todoist: Configured Todoist client.
+        source: One configured source or an ordered sequence of sources.
         telegram: Configured Telegram client.
-        project_id: Project from which tasks are fetched.
-        batch_size: Maximum tasks sent in a single message.
     """
 
     def __init__(
         self,
-        todoist: TodoistClient,
+        source: ContentSource | Sequence[ContentSource],
         telegram: TelegramClient,
-        project_id: str,
-        batch_size: int = 1,
     ) -> None:
-        self._todoist = todoist
+        self._sources = [source] if hasattr(source, "build_message") else list(source)
+        if not self._sources:
+            raise ValueError("At least one content source is required")
         self._telegram = telegram
-        self._project_id = project_id
-        self._batch_size = batch_size
 
     def run(self) -> str:
         """Run one delivery cycle.
 
+        Each source independently selects its message, and messages are sent in
+        configured source order.
+
         Returns:
-            The message delivered to Telegram.
+            Delivered messages joined with a blank line. For a single source,
+            this is exactly the delivered message.
 
         Raises:
             requests.HTTPError: If either remote service rejects a request.
         """
-        tasks = self._todoist.get_tasks(self._project_id)
-        message = build_message(
-            tasks,
-            batch_size=self._batch_size,
-            section_resolver=self._todoist.get_section_name,
-        )
-        self._telegram.send_message(message)
-        return message
+        messages = []
+        for source in self._sources:
+            message = source.build_message()
+            self._telegram.send_message(message)
+            messages.append(message)
+        return "\n\n".join(messages)
